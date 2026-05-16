@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ResumeIQ — AI Resume Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07080f;
+  --bg2: #0d0e1a;
+  --card: #111220;
+  --border: rgba(255,255,255,0.07);
+  --accent: #f472b6;
+  --accent2: #e879f9;
+  --accent3: #818cf8;
+  --green: #34d399;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --text: #f0eaf5;
+  --muted: #9089a8;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(232,121,249,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 10% 80%, rgba(244,114,182,0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+header {
+  padding: 28px 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 2;
+}
+header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244,114,182,0.5), rgba(232,121,249,0.5), transparent);
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, #f472b6, #e879f9, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo span { font-weight: 400; opacity: 0.7; }
+.header-tag {
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 100px;
+}
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 24px;
+  position: relative;
+  z-index: 1;
+}
+.hero { text-align: center; margin-bottom: 56px; }
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.hero h1 .pink { color: var(--accent); }
+.hero h1 .purple { color: var(--accent2); }
+.hero p { color: var(--muted); font-size: 1rem; line-height: 1.7; max-width: 500px; margin: 0 auto; }
+.upload-zone {
+  border: 2px dashed rgba(244,114,182,0.25);
+  border-radius: 20px;
+  padding: 48px 32px;
+  text-align: center;
+  background: rgba(244,114,182,0.02);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  margin-bottom: 20px;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: rgba(244,114,182,0.6);
+  background: rgba(244,114,182,0.05);
+}
+.upload-zone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.upload-icon {
+  width: 56px; height: 56px;
+  background: rgba(244,114,182,0.1);
+  border: 1px solid rgba(244,114,182,0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 1.6rem;
+}
+.upload-zone h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.upload-zone p { color: var(--muted); font-size: 0.88rem; }
+.file-name { margin-top: 16px; color: var(--accent); font-size: 0.88rem; font-weight: 500; }
+.jd-section { margin-bottom: 24px; }
+.jd-section label {
+  display: block;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.jd-section textarea {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.3s;
+  outline: none;
+}
+.jd-section textarea:focus { border-color: rgba(244,114,182,0.4); }
+.jd-section textarea::placeholder { color: var(--muted); }
+.analyze-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f472b6, #e879f9);
+  color: #07080f;
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(244,114,182,0.35); }
+.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.loading { display: none; text-align: center; padding: 60px 20px; }
+.loading-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 20px;
+}
+.loading p { color: var(--muted); font-size: 0.9rem; }
+.loading-steps { margin-top: 16px; }
+.loading-step { font-size: 0.82rem; color: var(--muted); padding: 4px 0; transition: color 0.3s; }
+.loading-step.active { color: var(--accent); }
+.loading-step.done { color: var(--green); }
+.results { display: none; }
+.results-header { text-align: center; margin-bottom: 40px; }
+.results-header h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+.results-header p { color: var(--muted); font-size: 0.9rem; }
+.score-section {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 40px;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px;
+  margin-bottom: 24px;
+}
+.score-ring-wrap { position: relative; width: 140px; height: 140px; }
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.score-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+.score-ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; stroke-dasharray: 380; stroke-dashoffset: 380; transition: stroke-dashoffset 1.5s ease; }
+.score-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.score-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; }
+.score-label { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.score-details h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+.score-details p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px; }
+.score-breakdown { display: flex; gap: 12px; flex-wrap: wrap; }
+.score-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.score-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+.cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  transition: border-color 0.3s;
+}
+.card:hover { border-color: rgba(244,114,182,0.15); }
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; }
+.card-sub { font-size: 0.75rem; color: var(--muted); }
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 100px; font-size: 0.78rem; font-weight: 500; }
+.tag.green { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--green); }
+.tag.red { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--red); }
+.tag.purple { background: rgba(129,140,248,0.1); border: 1px solid rgba(129,140,248,0.25); color: var(--accent3); }
+.card.full { grid-column: span 2; }
+.suggestions-list { list-style: none; }
+.suggestions-list li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; line-height: 1.6; color: var(--muted); }
+.suggestions-list li:last-child { border-bottom: none; }
+.suggestions-list li .icon { flex-shrink: 0; margin-top: 2px; }
+.suggestions-list li.good { color: var(--green); }
+.suggestions-list li.warn { color: var(--yellow); }
+.suggestions-list li.bad { color: var(--red); }
+.ats-bar-wrap { margin-top: 8px; }
+.ats-bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+.ats-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; margin-bottom: 14px; }
+.ats-bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s ease; width: 0; }
+.jd-match-score { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+.jd-match-label { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.05em; }
+.reset-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 24px;
+}
+.reset-btn:hover { border-color: rgba(244,114,182,0.3); color: var(--accent); }
+.error-box {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 14px;
+  padding: 20px 24px;
+  color: var(--red);
+  font-size: 0.9rem;
+  margin-top: 20px;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+  header { padding: 20px 24px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .card.full { grid-column: span 1; }
+  .score-section { grid-template-columns: 1fr; text-align: center; }
+  .score-ring-wrap { margin: 0 auto; }
+  .score-breakdown { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Resume<span>IQ</span></div>
+  <div class="header-tag">Powered by Gemini AI</div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Analyze your resume<br>with <span class="pink">AI</span> <span class="purple">intelligence</span></h1>
+    <p>Real AI analysis powered by Google Gemini — get ATS score, skill gaps, JD matching and honest feedback.</p>
+  </div>
+
+  <div id="uploadSection">
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="resumeFile" accept=".pdf,.txt" onchange="handleFileSelect(this)"/>
+      <div class="upload-icon">📄</div>
+      <h3>Drop your resume here</h3>
+      <p>Supports PDF and TXT files</p>
+      <div class="file-name" id="fileName"></div>
+    </div>
+
+    <div class="jd-section">
+      <label>Job Description (Optional — for JD match score)</label>
+      <textarea id="jdText" placeholder="Paste the job description here to get a match score and tailored suggestions..."></textarea>
+    </div>
+
+    <button class="analyze-btn" onclick="analyzeResume()" id="analyzeBtn">✦ Analyze My Resume</button>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <p>Gemini AI is analyzing your resume...</p>
+    <div class="loading-steps">
+      <div class="loading-step" id="step1">📄 Reading document...</div>
+      <div class="loading-step" id="step2">🔍 Extracting content...</div>
+      <div class="loading-step" id="step3">🤖 Running Gemini AI analysis...</div>
+      <div class="loading-step" id="step4">📊 Building your report...</div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-header">
+      <h2>Your Resume Report</h2>
+      <p id="resultsSubtitle">Analyzed by Gemini AI</p>
+    </div>
+
+    <div class="score-section" id="scoreSection">
+      <div class="score-ring-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="score-ring-bg" cx="70" cy="70" r="60"/>
+          <circle class="score-ring-fill" id="scoreRing" cx="70" cy="70" r="60"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-num" id="scoreNum">0</div>
+          <div class="score-label">/ 100</div>
+        </div>
+      </div>
+      <div class="score-details">
+        <h3 id="scoreTitle"></h3>
+        <p id="scoreDesc"></p>
+        <div class="score-breakdown" id="scoreBreakdown"></div>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(52,211,153,0.1)">✅</div>
+          <div>
+            <div class="card-title">Detected Skills</div>
+            <div class="card-sub" id="foundCount">0 skills found</div>
+          </div>
+        </div>
+        <div class="tags-wrap" id="foundSkills"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(248,113,113,0.1)">⚠️</div>
+          <div>
+            <div class="card-title">Missing Skills</div>
+            <div class="card-sub" id="missingCount">0 to add</div>
+          </div>
+        </div>
+        <div class="tags-wrap" id="missingSkills"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(129,140,248,0.1)">🤖</div>
+          <div>
+            <div class="card-title">ATS Compatibility</div>
+            <div class="card-sub">Applicant Tracking System</div>
+          </div>
+        </div>
+        <div id="atsChecks"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(244,114,182,0.1)">🎯</div>
+          <div>
+            <div class="card-title">JD Match Score</div>
+            <div class="card-sub">Job description alignment</div>
+          </div>
+        </div>
+        <div id="jdMatchContent"></div>
+      </div>
+
+      <div class="card full">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(251,191,36,0.1)">💡</div>
+          <div>
+            <div class="card-title">AI Suggestions</div>
+            <div class="card-sub">Personalized by Gemini</div>
+          </div>
+        </div>
+        <ul class="suggestions-list" id="suggestions"></ul>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAnalyzer()">← Analyze Another Resume</button>
+  </div>
+</main>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/analyze";
+
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById('resumeFile').files = e.dataTransfer.files; handleFileSelect({ files: [file] }); }
+});
+
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (file) document.getElementById('fileName').textContent = '📎 ' + file.name;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function analyzeResume() {
+  const fileInput = document.getElementById("resumeFile");
+  const file = fileInput.files[0];
+  const errorBox = document.getElementById('errorBox');
+  errorBox.style.display = 'none';
+
+  if (!file) { alert("Please upload a resume file first."); return; }
+
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  const steps = ['step1','step2','step3','step4'];
+  for (let i = 0; i < steps.length; i++) {
+    await delay(700);
+    if (i > 0) document.getElementById(steps[i-1]).classList.replace('active','done');
+    document.getElementById(steps[i]).classList.add('active');
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('job_description', document.getElementById('jdText').value);
+
+    const response = await fetch(API_URL, { method: 'POST', body: formData });
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+    const data = await response.json();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    renderResults(data);
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('uploadSection').style.display = 'block';
+    errorBox.style.display = 'block';
+    errorBox.textContent = '❌ Error: ' + err.message + ' — Make sure your FastAPI backend is running on port 8000!';
+  }
+}
+
+function renderResults(data) {
+  const score = data.score || 0;
+  const color = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#f87171';
+
+  // Ring animation
+  const ring = document.getElementById('scoreRing');
+  const circumference = 2 * Math.PI * 60;
+  ring.style.strokeDasharray = circumference;
+  ring.style.stroke = color;
+  setTimeout(() => { ring.style.strokeDashoffset = circumference - (score / 100) * circumference; }, 100);
+
+  // Number animation
+  let current = 0;
+  const interval = setInterval(() => {
+    current += 2;
+    if (current >= score) { current = score; clearInterval(interval); }
+    document.getElementById('scoreNum').textContent = current;
+  }, 20);
+  document.getElementById('scoreNum').style.color = color;
+
+  document.getElementById('scoreTitle').textContent = data.score_title || '';
+  document.getElementById('scoreDesc').textContent = data.score_description || '';
+  document.getElementById('resultsSubtitle').textContent = `Analyzed by Gemini AI · ${(data.found_skills || []).length} skills detected · Score: ${score}/100`;
+
+  // Pills
+  const found = data.found_skills || [];
+  const missing = data.missing_skills || [];
+  document.getElementById('scoreBreakdown').innerHTML = [
+    { label: `${found.length} Skills`, color: '#34d399' },
+    { label: `${missing.length} Missing`, color: '#f87171' },
+    { label: data.jd_match !== null && data.jd_match !== undefined ? `JD Match: ${data.jd_match}%` : 'No JD', color: '#818cf8' },
+  ].map(p => `<div class="score-pill"><div class="dot" style="background:${p.color}"></div>${p.label}</div>`).join('');
+
+  // Skills
+  document.getElementById('foundCount').textContent = `${found.length} skill${found.length !== 1 ? 's' : ''} found`;
+  document.getElementById('foundSkills').innerHTML = found.map(s => `<span class="tag green">✓ ${s}</span>`).join('') || '<span style="color:var(--muted);font-size:0.85rem">None detected</span>';
+
+  document.getElementById('missingCount').textContent = `${missing.length} to add`;
+  document.getElementById('missingSkills').innerHTML = missing.slice(0, 8).map(s => `<span class="tag red">+ ${s}</span>`).join('');
+
+  // ATS
+  const atsChecks = data.ats_checks || [];
+  const atsScore = atsChecks.length ? Math.round((atsChecks.filter(c => c.pass).length / atsChecks.length) * 100) : 0;
+  const atsColor = atsScore >= 70 ? 'var(--green)' : 'var(--yellow)';
+  document.getElementById('atsChecks').innerHTML = `
+    <div class="ats-bar-wrap">
+      <div class="ats-bar-label"><span>ATS Score</span><span style="color:${atsColor}">${atsScore}%</span></div>
+      <div class="ats-bar"><div class="ats-bar-fill" id="atsBarFill" style="background:${atsColor}"></div></div>
+    </div>
+    ${atsChecks.map(c => `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:0.82rem;color:${c.pass ? 'var(--green)' : 'var(--muted)'}">
+      <span>${c.pass ? '✓' : '○'}</span> ${c.label}
+    </div>`).join('')}
+  `;
+  setTimeout(() => { const b = document.getElementById('atsBarFill'); if(b) b.style.width = atsScore + '%'; }, 300);
+
+  // JD Match
+  if (data.jd_match !== null && data.jd_match !== undefined) {
+    const matched = data.jd_matched_skills || [];
+    document.getElementById('jdMatchContent').innerHTML = `
+      <div class="jd-match-score">${data.jd_match}%</div>
+      <div class="jd-match-label">match with job description</div>
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:6px">
+        ${matched.map(s => `<span class="tag purple">✓ ${s}</span>`).join('')}
+        ${matched.length === 0 ? '<span style="color:var(--muted);font-size:0.82rem">No skill overlap found</span>' : ''}
+      </div>
+    `;
+  } else {
+    document.getElementById('jdMatchContent').innerHTML = `<div style="color:var(--muted);font-size:0.88rem;line-height:1.6">Paste a job description before analyzing to get your match score.</div>`;
+  }
+
+  // Suggestions
+  const suggestions = data.suggestions || [];
+  const icons = { good: '✅', warn: '⚠️', bad: '❌' };
+  document.getElementById('suggestions').innerHTML = suggestions.map(s =>
+    `<li class="${s.type}"><span class="icon">${icons[s.type] || '💡'}</span><span>${s.text}</span></li>`
+  ).join('');
+}
+
+function resetAnalyzer() {
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('resumeFile').value = '';
+  document.getElementById('fileName').textContent = '';
+  document.getElementById('jdText').value = '';
+  ['step1','step2','step3','step4'].forEach(id => { document.getElementById(id).className = 'loading-step'; });
+}
+</script>
+</body>
+</html>
